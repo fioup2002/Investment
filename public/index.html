@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="zh-Hans-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <link rel="stylesheet" href="./css/index.min.css" />
+    <script src="./js/lib/vue.min-2.5.16.js"></script>
+    <script src="./js/lib/jquery-3.6.0.js"></script>
+    <script src="./js/util.js"></script>
+  </head>
+  <body style="display: none">
+    <div id="index" class="index">
+      <div class="topic">資訊</div>
+      <table class="table">
+        <tr class="row">
+          <td class="column">名字</td>
+          <td class="column">代碼</td>
+          <td class="column">買價</td>
+          <td class="column">賣價</td>
+          <td class="column">動作</td>
+          <td class="column">估值</td>
+        </tr>
+        <tr class="row" v-for="item in list">
+          <td class="column" v-html="item.name"></td>
+          <td class="column" v-html="item.code"></td>
+          <td class="column" v-html="item.ask"></td>
+          <td class="column" v-html="item.bid"></td>
+          <td class="column">
+            <input v-if="item.action == 'buy'" type="button" @click="action(item.code, 'buy')" value="買" />
+            <input v-else-if="item.action == 'sell'" type="button" @click="action(item.code, 'sell')" value="賣" />
+            <div v-else v-html="item.action"></div>
+          </td>
+          <td class="column" v-html="money"></td>
+        </tr>
+      </table>
+    </div>
+    <script>
+      new Vue({
+        el: "#index",
+        data() {
+          return {
+            ws: null,
+            product: ["2317"],
+            list: [],
+            buyList: [],
+            lastList: [],
+            money: 0,
+            decrease: 0,
+          };
+        },
+        watch: {},
+        computed: {},
+        created() {
+          this.ws = new WebSocket(`ws://172.20.114.194:8888`);
+          this.ws.onopen = () => {
+            this.sendRequest();
+            this.startCountdown();
+          };
+          this.ws.onmessage = (message) => {
+            const response = JSON.parse(message.data);
+            const { cmd } = response;
+            if (cmd == "getStock") {
+              this.parseStock(JSON.parse(response.result));
+            }
+          };
+        },
+        mounted() {},
+        methods: {
+          sendRequest() {
+            let url = "https://mis.twse.com.tw/stock/api/getStockInfo.jsp?ex_ch=";
+            this.product.forEach((name, i) => {
+              url += `tse_${name}.tw`;
+              if (i < this.product.length - 1) {
+                url += "|";
+              }
+            });
+            this.ws.send(JSON.stringify({ cmd: "getStock", url }));
+          },
+          parseStock(data) {
+            const getAction = (code, ask, bid) => {
+              const buyProduct = this.buyList.filter((item) => {
+                return item.code == code;
+              })[0];
+              let res = "";
+              // 已買入
+              if (buyProduct) {
+                if (bid >= buyProduct.ask) {
+                  res = "sell";
+                } else {
+                  res = `買入${buyProduct.ask}`;
+                }
+              }
+              // 尚未買入
+              else {
+                const lastProduct = this.lastList.filter((item) => {
+                  return item.code == code;
+                })[0];
+                if (lastProduct) {
+                  // 買價下跌
+                  if (ask < lastProduct.ask) {
+                    // decrease
+                    // res = "buy";
+                  }
+                }
+              }
+              return res;
+            };
+            this.lastList = JSON.parse(JSON.stringify(this.list));
+            this.list = [];
+            data.msgArray.forEach((item) => {
+              const { c: code, n: name, o: open, pz: price, h: high, l: low, a, b } = item;
+              let random = Math.floor(Math.random() * 1);
+              random = 0;
+              const ask = Number(a.split("_")[0]) + random;
+              const bid = Number(b.split("_")[0]) + random;
+              const obj = {
+                code,
+                name,
+                open,
+                price,
+                action: getAction(code, ask, bid),
+                high,
+                low,
+                ask,
+                bid,
+              };
+              this.list.push(obj);
+            });
+          },
+          startCountdown() {
+            let min = new Date().getMinutes();
+            setInterval(() => {
+              const now = new Date().getMinutes();
+              const sec = new Date().getSeconds();
+              if (sec % 5 == 0) {
+                this.sendRequest();
+                min = now;
+              }
+            }, 1000);
+          },
+          action(code, type) {
+            const product = this.list.filter((item) => {
+              return item.code == code;
+            })[0];
+            const buyProduct = this.buyList.filter((item) => {
+              return item.code == code;
+            })[0];
+            if (type == "buy") {
+              if (!buyProduct) {
+                this.buyList.push(JSON.parse(JSON.stringify(product)));
+              }
+            } else if (type == "sell") {
+              if (buyProduct) {
+                this.buyList.forEach((item, i) => {
+                  if (item.code == code) {
+                    this.money += Number(product.bid) - Number(item.ask);
+                    this.buyList.splice(i, 1);
+                  }
+                });
+              }
+            }
+          },
+        },
+      });
+    </script>
+  </body>
+</html>

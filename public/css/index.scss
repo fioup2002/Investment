@@ -1,0 +1,33 @@
+@import "./_mixin.scss";
+body {
+  margin: 0;
+  .index {
+    margin: auto;
+    padding-top: 0.1rem;
+    @include size(750px);
+    @include flex($align: center, $dir: column);
+    .topic {
+      @include font(28);
+    }
+    .table {
+      margin-top: 0.1rem;
+      border-spacing: 0;
+      .row {
+        .column {
+          padding: 0.1rem;
+          border-left: 0.01rem solid #000;
+          border-top: 0.01rem solid #000;
+          @include font(24, $align: center);
+          &:last-of-type {
+            border-right: 0.01rem solid #000;
+          }
+        }
+        &:last-of-type {
+          .column {
+            border-bottom: 0.01rem solid #000;
+          }
+        }
+      }
+    }
+  }
+}
