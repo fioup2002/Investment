@@ -1,0 +1,42 @@
+body {
+  margin: 0;
+}
+body .index {
+  padding: 0.1rem;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+body .index .button {
+  padding: 0.05rem;
+  font-size: 0.2rem;
+}
+body .index .line {
+  display: flex;
+  align-items: center;
+  gap: 0.1rem;
+}
+body .index .line .label {
+  text-align: center;
+  font-size: 0.2rem;
+}
+body .index .line .input {
+  width: 2rem;
+}
+body .index .table {
+  margin-top: 0.1rem;
+  border-spacing: 0;
+}
+body .index .table .row .column {
+  padding: 0.05rem;
+  border-left: 0.01rem solid #000;
+  border-top: 0.01rem solid #000;
+  text-align: center;
+  font-size: 0.2rem;
+}
+body .index .table .row .column:last-of-type {
+  border-right: 0.01rem solid #000;
+}
+body .index .table .row:last-of-type .column {
+  border-bottom: 0.01rem solid #000;
+}
