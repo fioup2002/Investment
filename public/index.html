@@ -21,7 +21,6 @@
       <table class="table">
         <tr class="row">
           <td class="column">代碼</td>
-          <td class="column">名字</td>
           <td class="column">購買價格</td>
           <td class="column">目前價格</td>
           <td class="column">最後更新時間</td>
@@ -38,21 +37,10 @@
         setup() {
           const state = reactive({
             ws: null,
-            codes: new Map(),
             code: "",
             buyPrice: 0,
             list: [],
           });
-          watch(
-            () => state.codes,
-            (newValue) => {
-              send("updateCodes", { codes: Object.fromEntries(state.codes) });
-              if (state.codes.size == 0) {
-                state.list.length = 0;
-              }
-            },
-            { deep: true },
-          );
           const click = (type) => {
             switch (type) {
               case "add":
@@ -60,9 +48,9 @@
                 const { code, buyPrice } = state;
                 if (code.length != 0) {
                   if (type == "add") {
-                    state.codes.set(code, buyPrice);
+                    send("addCode", { code, buyPrice });
                   } else {
-                    state.codes.delete(code);
+                    send("deleteCode", { code });
                   }
                 }
                 break;
@@ -81,10 +69,9 @@
                 list.forEach((item) => {
                   const array = [];
                   array.push(item.code);
-                  array.push(item.name);
                   array.push(item.buyPrice);
                   array.push(item.price);
-                  array.push(util.formatDate(item.time));
+                  array.push(util.formatDate(new Date(item.time)));
                   array.push(item.status);
                   state.list.push(array);
                 });

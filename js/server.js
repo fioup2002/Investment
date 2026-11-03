@@ -20,10 +20,14 @@ const server = {
   },
   receive(message) {
     const data = JSON.parse(message.toString());
-    const { cmd, codes } = data;
+    const { cmd, code, buyPrice } = data;
     switch (cmd) {
-      case "updateCodes": {
-        this.cb("updateCodes", codes);
+      case "addCode": {
+        this.cb("addCode", code, buyPrice);
+        break;
+      }
+      case "deleteCode": {
+        this.cb("deleteCode", code);
         break;
       }
     }
